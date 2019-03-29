@@ -1,6 +1,5 @@
 import { forwardRef, useRef, useImperativeHandle, useEffect, createElement } from 'rax';
 import { isWeex } from 'universal-env';
-import styles from './index.css';
 
 const typeMap = {
   'default': 'text',
@@ -45,8 +44,10 @@ function TextInput(props, ref) {
   function setValue(value = '') {
     if (isWeex) {
       refEl.current.setAttr('value', value, false); // weex api.
-    } else {
+    } else if (refEl.current.setAttribute) {
       refEl.current.setAttribute('value', value);
+    } else {
+      refEl.current.attributes.value = value;
     }
   }
 
@@ -161,5 +162,21 @@ function TextInput(props, ref) {
     return input;
   }
 }
+
+const styles = {
+  initial: {
+    appearance: 'none',
+    backgroundColor: 'transparent',
+    borderColor: '#000000',
+    borderWidth: 0,
+    boxSizing: 'border-box',
+    color: '#000000',
+    padding: 0,
+    paddingLeft: 24,
+    fontSize: 24,
+    lineHeight: 60,
+    height: 60, // default height
+  }
+};
 
 export default forwardRef(TextInput);
