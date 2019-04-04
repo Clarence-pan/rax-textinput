@@ -17,8 +17,6 @@ module.exports = function(api) {
       ['@babel/plugin-proposal-decorators', { 'legacy': true }],
     ],
     'ignore': [
-      'src/generator/templates',
-      '__mockc__',
       'dist'
     ],
   };

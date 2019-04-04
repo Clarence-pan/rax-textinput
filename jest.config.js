@@ -9,9 +9,6 @@ module.exports = {
   'transform': {
     '^.+\\.js$': 'babel-jest'
   },
-  'setupFiles': [
-    'jest-localstorage-mock'
-  ],
   'testPathIgnorePatterns': [
     '/node_modules/',
     '/fixtures/',

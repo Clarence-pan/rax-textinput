@@ -1,5 +1,5 @@
-import {Component, createElement, setNativeProps} from 'rax';
-import {isWeex} from 'universal-env';
+import { forwardRef, useRef, useImperativeHandle, useEffect, createElement } from 'rax';
+import { isWeex } from 'universal-env';
 
 const typeMap = {
   'default': 'text',
@@ -38,127 +38,128 @@ function genEventObject(originalEvent) {
   };
 }
 
-class TextInput extends Component {
-  static propTypes = {};
+function TextInput(props, ref) {
+  const refEl = useRef(null);
 
-  componentWillReceiveProps(newProps) {
-    setNativeProps(this.refs.input, {value: newProps.value});
+  function setValue(value = '') {
+    if (isWeex) {
+      refEl.current.setAttr('value', value, false); // weex api.
+    } else if (refEl.current.setAttribute) {
+      refEl.current.setAttribute('value', value);
+    } else {
+      refEl.current.attributes.value = value;
+    }
   }
 
-  handleInput = (event) => {
-    this.props.onInput(genEventObject(event));
+  useEffect(() => {
+    setValue(props.value);
+  });
+
+  const {
+    accessibilityLabel,
+    autoComplete,
+    editable,
+    keyboardType,
+    maxNumberOfLines,
+    maxLength,
+    maxlength,
+    multiline,
+    numberOfLines,
+    onBlur,
+    onFocus,
+    onChange,
+    onChangeText,
+    onInput,
+    password,
+    secureTextEntry,
+    style,
+    value,
+    defaultValue,
+  } = props;
+
+  const handleInput = (event) => {
+    onInput(genEventObject(event));
   };
 
-  handleChange = (event) => {
-    if (this.props.onChange) {
-      this.props.onChange(genEventObject(event));
-    }
-
-    if (this.props.onChangeText) {
-      let text = getText(event);
-      this.props.onChangeText(text);
-    }
+  const handleChange = (event) => {
+    if (onChange) onChange(genEventObject(event));
+    if (onChangeText) onChangeText(getText(event));
   };
 
-  handleFocus = (event) => {
-    this.props.onFocus(genEventObject(event));
+  const handleFocus = (event) => {
+    onFocus(genEventObject(event));
   };
 
-  handleBlur = (event) => {
-    this.props.onBlur(genEventObject(event));
+  const handleBlur = (event) => {
+    onBlur(genEventObject(event));
   };
 
-  focus = () => {
-    this.refs.input.focus && this.refs.input.focus();
+  const focus = () => {
+    refEl.current.focus();
   };
 
-  blur = () => {
-    this.refs.input.blur && this.refs.input.blur();
+  const blur = () => {
+    refEl.current.blur();
   };
 
-  clear = () => {
-    setNativeProps(this.refs.input, {value: ''});
+  const clear = () => {
+    setValue('');
   };
 
-  render() {
-    const {
-      accessibilityLabel,
-      autoComplete,
-      editable,
-      keyboardType,
-      maxNumberOfLines,
-      maxLength,
-      maxlength,
-      multiline,
-      numberOfLines,
-      onBlur,
-      onFocus,
-      onChange,
-      onChangeText,
-      onInput,
-      password,
-      secureTextEntry,
-      style,
-      value,
-      defaultValue,
-    } = this.props;
+  useImperativeHandle(ref, () => ({ focus, blur, clear }));
 
-    let propsCommon = {
-      ...this.props,
-      'aria-label': accessibilityLabel,
-      autoComplete: autoComplete && 'on',
-      maxlength: maxlength || maxLength,
-      onChange: (onChange || onChangeText) && this.handleChange,
-      onInput: onInput && this.handleInput,
-      onBlur: onBlur && this.handleBlur,
-      onFocus: onFocus && this.handleFocus,
-      style: {
-        ...styles.initial,
-        ...style
-      },
-      ref: 'input'
-    };
+  let propsCommon = {
+    ...props,
+    'aria-label': accessibilityLabel,
+    autoComplete: autoComplete && 'on',
+    maxlength: maxlength || maxLength,
+    onChange: (onChange || onChangeText) && handleChange,
+    onInput: onInput && handleInput,
+    onBlur: onBlur && handleBlur,
+    onFocus: onFocus && handleFocus,
+    style: { ...styles.initial, ...style },
+    ref: refEl,
+  };
 
-    if (value) {
-      delete propsCommon.defaultValue;
+  if (value) {
+    delete propsCommon.defaultValue;
+  } else {
+    propsCommon.value = defaultValue;
+  }
+
+  if (typeof editable !== 'undefined' && !editable) {
+    propsCommon.readOnly = true;
+  }
+
+  let type = typeMap[keyboardType];
+  if (password || secureTextEntry) {
+    type = 'password';
+  }
+
+  if (isWeex) {
+    // Diff with web readonly attr, `disabled` must be boolean value
+    let disabled = Boolean(propsCommon.readOnly);
+
+    if (multiline) {
+      return <textarea {...propsCommon} rows={20} disabled={disabled} />;
     } else {
-      propsCommon.value = defaultValue;
+      // https://github.com/alibaba/weex/blob/dev/doc/components/input.md
+      return <input {...propsCommon} type={type} disabled={disabled} />;
     }
+  } else {
+    let input;
+    if (multiline) {
+      const propsMultiline = {
+        maxRows: maxNumberOfLines || numberOfLines,
+        minRows: numberOfLines
+      };
 
-    if (typeof editable !== 'undefined' && !editable) {
-      propsCommon.readOnly = true;
-    }
-
-    let type = typeMap[keyboardType];
-    if (password || secureTextEntry) {
-      type = 'password';
-    }
-
-    if (isWeex) {
-      // Diff with web readonly attr, `disabled` must be boolean value
-      let disabled = Boolean(propsCommon.readOnly);
-
-      if (multiline) {
-        return <textarea {...propsCommon} rows={20} disabled={disabled} />;
-      } else {
-        // https://github.com/alibaba/weex/blob/dev/doc/components/input.md
-        return <input {...propsCommon} type={type} disabled={disabled} />;
-      }
+      input = <textarea {...propsCommon} {...propsMultiline} >{propsCommon.value}</textarea>;
     } else {
-      let input;
-      if (multiline) {
-        const propsMultiline = {
-          maxRows: maxNumberOfLines || numberOfLines,
-          minRows: numberOfLines
-        };
-
-        input = <textarea {...propsCommon} {...propsMultiline} >{propsCommon.value}</textarea>;
-      } else {
-        input = <input {...propsCommon} type={type} />;
-      }
-
-      return input;
+      input = <input {...propsCommon} type={type} />;
     }
+
+    return input;
   }
 }
 
@@ -178,4 +179,4 @@ const styles = {
   }
 };
 
-export default TextInput;
+export default forwardRef(TextInput);
