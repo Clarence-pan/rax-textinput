@@ -44,10 +44,8 @@ function TextInput(props, ref) {
   function setValue(value = '') {
     if (isWeex) {
       refEl.current.setAttr('value', value, false); // weex api.
-    } else if (refEl.current.setAttribute) {
-      refEl.current.setAttribute('value', value);
     } else {
-      refEl.current.attributes.value = value;
+      refEl.current.value = value;
     }
   }
 
