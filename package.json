@@ -1,6 +1,6 @@
 {
   "name": "rax-textinput",
-  "version": "1.0.0",
+  "version": "1.0.1-miniapp.beta.0",
   "description": "TextInput component for Rax.",
   "license": "BSD-3-Clause",
   "main": "lib/index.js",
@@ -14,6 +14,9 @@
     "dist",
     "lib"
   ],
+  "miniappConfig": {
+    "main": "lib/miniapp/index"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/raxjs/rax-textinput.git"
